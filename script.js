@@ -172,40 +172,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ========== SCROLL ANIMATIONS ==========
-    const observerOptions = {
-        threshold: 0.2,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
+    // Observer for about section (counters only)
+    const aboutObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-
-                if (entry.target.classList.contains('about') && !counted) {
-                    animateCounters();
-                    counted = true;
-                }
-
-                if (entry.target.classList.contains('skills')) {
-                    setTimeout(animateSkillBars, 300);
-                }
+            if (entry.isIntersecting && !counted) {
+                animateCounters();
+                counted = true;
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.3 });
 
-    // Observe sections
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.add('fade-in');
-        observer.observe(section);
-    });
+    const aboutSection = document.querySelector('.about');
+    if (aboutSection) aboutObserver.observe(aboutSection);
 
-    // Observe individual cards
-    document.querySelectorAll('.skill-card, .project-card').forEach((card, index) => {
-        card.classList.add('fade-in');
-        card.style.transitionDelay = `${index * 0.1}s`;
-        observer.observe(card);
-    });
+    // Observer for skill bars
+    const skillsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                setTimeout(animateSkillBars, 300);
+                skillsObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    const skillsSection = document.querySelector('.skills');
+    if (skillsSection) skillsObserver.observe(skillsSection);
 
     // ========== PROJECT FILTERS ==========
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -231,33 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ========== CONTACT FORM ==========
-    const contactForm = document.getElementById('contactForm');
-
-    contactForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(contactForm);
-        const name = formData.get('name');
-
-        // Success animation
-        const submitBtn = contactForm.querySelector('.btn-submit');
-        const originalText = submitBtn.innerHTML;
-
-        submitBtn.innerHTML = '<span>Message Sent! ✓</span>';
-        submitBtn.style.background =
-            'linear-gradient(135deg, #00cec9, #00b894)';
-
-        setTimeout(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.style.background = '';
-            contactForm.reset();
-        }, 3000);
-
-        console.log(`Message from ${name} submitted successfully!`);
-    });
-
-    // ========== SMOOTH SCROLL FIX ==========
+    // ========== SMOOTH SCROLL ==========
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -273,18 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// ========== FADE IN KEYFRAME (for filter animation) ==========
+// ========== FADE IN KEYFRAME ==========
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
+        from { opacity: 0; transform: scale(0.9); }
+        to   { opacity: 1; transform: scale(1);   }
     }
 `;
 document.head.appendChild(style);
